@@ -44,7 +44,10 @@ class AggregateAlbumByDateJob
         aggregate_row.save!
       end
 
-      $redis.sadd("tc_trends::aggregation::albums::#{date}", album_id)
+      $redis.srem("tc_trends::aggregation::albums::#{date}", album_id)
     end
+  rescue => e
+    AlbumsByDate.where(trend_date: date, album_id: album_id).delete_all
+    raise e
   end
 end
