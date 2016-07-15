@@ -4,12 +4,13 @@ class AggregateAlbumByDateJob
   def self.perform date, album_id
     AlbumsByDate.where(trend_date: date, album_id: album_id).delete_all
 
-    album = Album.find(album_id)
+    album = Album.includes(:person, { creatives: :artist }).find(album_id)
 
     if Person.exclude_ids.include?(album.person_id)
       Rails.logger.info "Skipping album #{album_id} because owner is on exclude list"
     else
       trend_month   = Date.strptime(date).beginning_of_month.strftime("%Y%m").to_i
+      trend_year    = Date.strptime(date).strftime("%Y").to_i
       tds           = DetailSummary.arel_table
       geos          = Geo.arel_table
       countries     = Country.arel_table
@@ -28,13 +29,18 @@ class AggregateAlbumByDateJob
 
       country_rows.keys.each do |country_code|
         aggregate_row = AlbumsByDate.new({
-          trend_date:   date,
-          trend_month:  trend_month,
-          album_id:     album.id,
-          album_name:   album.name,
-          album_type:   album.album_type,
-          country_code: country_code,
-          country_name: country_rows[country_code].first.name
+          trend_date:     date,
+          trend_month:    trend_month,
+          trend_year:     trend_year,
+          album_id:       album.id,
+          album_name:     album.name,
+          album_type:     album.album_type,
+          artist_name:    album.primary_artists,
+          person_id:      album.person_id,
+          person_name:    album.person.name,
+          email_address:  album.person.email,
+          country_code:   country_code,
+          country_name:   country_rows[country_code].first.name
         })
 
         aggregate_row.stream_count          = country_rows[country_code].select { |row| row.trans_type_id == 3 }.sum(&:qty)

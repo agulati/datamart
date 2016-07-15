@@ -1,4 +1,4 @@
-class AlbumAggregatorJob
+class AggregationJob
   @queue = :albums
 
   def self.perform date=Date.yesterday
@@ -11,11 +11,18 @@ class AlbumAggregatorJob
   end
 
   def populate_aggregates
+    log_record = AggregationLog.create({
+      trend_date:       @date,
+      aggregation_type: "AlbumsByDate",
+      status:           AggregationLog::IN_PROGRESS
+    })
+
     Rails.logger.info "Remove any previously aggregated data"
+    $redis.del(@working_queue_key)
     AlbumsByDate.where(trend_date: @date).delete_all
 
     Rails.logger.info "Query distinct album ids"
-    albums = DetailSummary.select(:album_id).where(date: @date).distinct
+    albums      = DetailSummary.select(:album_id).where(date: @date).limit(100).distinct
     @num_albums = albums.length
     Rails.logger.info "Found #{@num_albums} albums, beginning aggregation"
 
@@ -41,5 +48,14 @@ class AlbumAggregatorJob
     end
 
     Rails.logger.info "Completed album by date aggregation"
+    log_record.update_attributes(status: AggregationLog::COMPLETED)
+
+    Resque.enqueue(AggregateAlbumsByMonthJob, @date)
+    Resque.enqueue(AggregatePeopleByDateJob,  @date)
+    Resque.enqueue(AggregateArtistsByDateJob, @date)
+  rescue => e
+    Rails.logger.error "Error completing album aggregation for #{@date}: #{e.message}"
+    log_record.update_attributes(status: AggregationLog::ERROR)
+    raise e
   end
 end

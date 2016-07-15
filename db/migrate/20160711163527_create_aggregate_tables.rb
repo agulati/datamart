@@ -14,6 +14,10 @@ class CreateAggregateTables < ActiveRecord::Migration[5.0]
       t.integer   :album_id
       t.string    :album_name
       t.string    :album_type
+      t.string    :artist_name
+      t.integer   :person_id
+      t.string    :person_name
+      t.string    :email_address
       t.string    :country_code
       t.string    :country_name
       t.integer   :stream_count
@@ -26,6 +30,8 @@ class CreateAggregateTables < ActiveRecord::Migration[5.0]
     add_index :albums_by_date, :trend_month
     add_index :albums_by_date, :country_code
     add_index :albums_by_date, :album_id
+    add_index :albums_by_date, :person_id
+    add_index :albums_by_date, :artist_name
 
     create_table  :albums_by_month, options: 'ENGINE=InnoDB DEFAULT CHARSET=utf8' do |t|
       t.integer   :trend_month

@@ -27,6 +27,10 @@ ActiveRecord::Schema.define(version: 20160711163527) do
     t.integer  "album_id"
     t.string   "album_name"
     t.string   "album_type"
+    t.string   "artist_name"
+    t.integer  "person_id"
+    t.string   "person_name"
+    t.string   "email_address"
     t.string   "country_code"
     t.string   "country_name"
     t.integer  "stream_count"
@@ -35,7 +39,9 @@ ActiveRecord::Schema.define(version: 20160711163527) do
     t.datetime "created_at",           null: false
     t.datetime "updated_at",           null: false
     t.index ["album_id"], name: "index_albums_by_date_on_album_id", using: :btree
+    t.index ["artist_name"], name: "index_albums_by_date_on_artist_name", using: :btree
     t.index ["country_code"], name: "index_albums_by_date_on_country_code", using: :btree
+    t.index ["person_id"], name: "index_albums_by_date_on_person_id", using: :btree
     t.index ["trend_date"], name: "index_albums_by_date_on_trend_date", using: :btree
     t.index ["trend_month"], name: "index_albums_by_date_on_trend_month", using: :btree
     t.index ["trend_year"], name: "index_albums_by_date_on_trend_year", using: :btree
