@@ -1,6 +1,6 @@
 class AggregatePeopleByDateJob
   @queue = :people
 
-  def self.perform
+  def self.perform date
   end
 end

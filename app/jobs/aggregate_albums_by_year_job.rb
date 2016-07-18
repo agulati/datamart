@@ -1,31 +1,27 @@
-class AggregateAlbumsByMonthJob
+class AggregateAlbumsByYearJob
   @queue = :albums
 
   def self.perform date
-    date                = Date.strptime(date)
-    trend_month         = date.beginning_of_month.strftime("%Y%m").to_i
-    trend_month_display = date.beginning_of_month.strftime("%B %Y")
-    trend_year          = date.strftime("%Y").to_i
+    date        = Date.strptime(date)
+    trend_year  = date.strftime("%Y").to_i
 
-    AlbumsByMonth.where(trend_month: trend_month).delete_all
+    AlbumsByYear.where(trend_year: trend_year).delete_all
 
     log_record = AggregationLog.create({
       trend_date:       date,
-      aggregation_type: "AlbumsByMonth",
+      aggregation_type: "AlbumsByYear",
       status:           AggregationLog::IN_PROGRESS
     })
 
-    abd     = AlbumsByDate.arel_table
-    select  = [abd[:album_id], abd[:album_name], abd[:album_type], abd[:country_code], abd[:country_name]]
-    sql     = abd.project(*select, abd[:stream_count].sum.as("stream_count"), abd[:album_download_count].sum.as("album_download_count"), abd[:song_download_count].sum.as("song_download_count"))
-                .where(abd[:trend_month].eq(trend_month))
+    abm     = AlbumsByMonth.arel_table
+    select  = [abm[:album_id], abm[:album_name], abm[:album_type], abm[:country_code], abm[:country_name]]
+    sql     = abm.project(*select, abm[:stream_count].sum.as("stream_count"), abm[:album_download_count].sum.as("album_download_count"), abm[:song_download_count].sum.as("song_download_count"))
+                .where(ab[:trend_year].eq(trend_year))
                 .group(*select)
 
-    albums  = AlbumsByDate.find_by_sql(sql)
+    albums  = AlbumsByMonth.find_by_sql(sql)
     albums.each do |album|
-      AlbumsByMonth.create({
-        trend_month:          trend_month,
-        trend_month_display:  trend_month_display,
+      AlbumsByYear.create({
         trend_year:           trend_year,
         album_id:             album.album_id,
         album_name:           album.album_name,
@@ -37,8 +33,6 @@ class AggregateAlbumsByMonthJob
         song_download_count:  album.song_download_count
       })
     end
-
-    Resque.enqueue(AggregateAlbumsByYearJob, date)
 
     Rails.logger.info "Completed album by month aggregation"
     log_record.update_attributes(status: AggregationLog::COMPLETED)
