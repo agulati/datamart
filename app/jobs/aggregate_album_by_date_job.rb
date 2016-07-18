@@ -1,5 +1,5 @@
 class AggregateAlbumByDateJob
-  @queue = :albums
+  @queue = :aggregation
 
   def self.perform date, album_id
     AlbumsByDate.where(trend_date: date, album_id: album_id).delete_all

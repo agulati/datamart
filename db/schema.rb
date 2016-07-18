@@ -38,18 +38,16 @@ ActiveRecord::Schema.define(version: 20160711163527) do
     t.integer  "song_download_count"
     t.datetime "created_at",           null: false
     t.datetime "updated_at",           null: false
-    t.index ["album_id"], name: "index_albums_by_date_on_album_id", using: :btree
-    t.index ["artist_name"], name: "index_albums_by_date_on_artist_name", using: :btree
-    t.index ["country_code"], name: "index_albums_by_date_on_country_code", using: :btree
-    t.index ["person_id"], name: "index_albums_by_date_on_person_id", using: :btree
+    t.index ["album_id", "album_name", "album_type"], name: "daily_album", using: :btree
+    t.index ["trend_date", "album_id", "album_name", "album_type"], name: "date_and_album", using: :btree
+    t.index ["trend_date", "trend_month", "artist_name", "country_code", "country_name"], name: "artists_by_date", using: :btree
+    t.index ["trend_date", "trend_month", "person_id", "person_name", "email_address", "country_code", "country_name"], name: "people_by_date", using: :btree
     t.index ["trend_date"], name: "index_albums_by_date_on_trend_date", using: :btree
-    t.index ["trend_month"], name: "index_albums_by_date_on_trend_month", using: :btree
-    t.index ["trend_year"], name: "index_albums_by_date_on_trend_year", using: :btree
+    t.index ["trend_month", "album_id", "album_name", "album_type", "country_code", "country_name"], name: "month_album_country", using: :btree
   end
 
   create_table "albums_by_month", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "trend_month"
-    t.string   "trend_month_display"
     t.integer  "trend_year"
     t.integer  "album_id"
     t.string   "album_name"
@@ -61,9 +59,10 @@ ActiveRecord::Schema.define(version: 20160711163527) do
     t.integer  "song_download_count"
     t.datetime "created_at",           null: false
     t.datetime "updated_at",           null: false
-    t.index ["album_id"], name: "index_albums_by_month_on_album_id", using: :btree
-    t.index ["country_code"], name: "index_albums_by_month_on_country_code", using: :btree
+    t.index ["album_id", "album_name", "album_type"], name: "monthly_album", using: :btree
+    t.index ["trend_month", "album_id", "album_name", "album_type"], name: "month_and_album", using: :btree
     t.index ["trend_month"], name: "index_albums_by_month_on_trend_month", using: :btree
+    t.index ["trend_year", "album_id", "album_name", "album_type", "country_code", "country_name"], name: "albums_by_year", using: :btree
   end
 
   create_table "albums_by_year", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -78,13 +77,14 @@ ActiveRecord::Schema.define(version: 20160711163527) do
     t.integer  "song_download_count"
     t.datetime "created_at",           null: false
     t.datetime "updated_at",           null: false
-    t.index ["album_id"], name: "index_albums_by_year_on_album_id", using: :btree
-    t.index ["country_code"], name: "index_albums_by_year_on_country_code", using: :btree
+    t.index ["album_id", "album_name", "album_type"], name: "yearly_album", using: :btree
     t.index ["trend_year"], name: "index_albums_by_year_on_trend_year", using: :btree
   end
 
   create_table "artists_by_date", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.date     "trend_date"
+    t.integer  "trend_month"
+    t.integer  "trend_year"
     t.string   "artist_name"
     t.string   "country_code"
     t.string   "country_name"
@@ -93,14 +93,15 @@ ActiveRecord::Schema.define(version: 20160711163527) do
     t.integer  "song_download_count"
     t.datetime "created_at",           null: false
     t.datetime "updated_at",           null: false
-    t.index ["artist_name"], name: "index_artists_by_date_on_artist_name", using: :btree
-    t.index ["country_code"], name: "index_artists_by_date_on_country_code", using: :btree
+    t.index ["artist_name"], name: "daily_artist", using: :btree
+    t.index ["trend_date", "artist_name"], name: "date_and_artist", using: :btree
     t.index ["trend_date"], name: "index_artists_by_date_on_trend_date", using: :btree
+    t.index ["trend_month", "artist_name", "country_code", "country_name"], name: "artists_by_month", using: :btree
   end
 
   create_table "artists_by_month", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "trend_month"
-    t.string   "trend_month_display"
+    t.integer  "trend_year"
     t.string   "artist_name"
     t.string   "country_code"
     t.string   "country_name"
@@ -109,9 +110,10 @@ ActiveRecord::Schema.define(version: 20160711163527) do
     t.integer  "song_download_count"
     t.datetime "created_at",           null: false
     t.datetime "updated_at",           null: false
-    t.index ["artist_name"], name: "index_artists_by_month_on_artist_name", using: :btree
-    t.index ["country_code"], name: "index_artists_by_month_on_country_code", using: :btree
+    t.index ["artist_name"], name: "monthly_artist", using: :btree
+    t.index ["trend_month", "artist_name"], name: "month_and_artist", using: :btree
     t.index ["trend_month"], name: "index_artists_by_month_on_trend_month", using: :btree
+    t.index ["trend_year", "artist_name", "country_code", "country_name"], name: "artists_by_year", using: :btree
   end
 
   create_table "artists_by_year", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -124,8 +126,7 @@ ActiveRecord::Schema.define(version: 20160711163527) do
     t.integer  "song_download_count"
     t.datetime "created_at",           null: false
     t.datetime "updated_at",           null: false
-    t.index ["artist_name"], name: "index_artists_by_year_on_artist_name", using: :btree
-    t.index ["country_code"], name: "index_artists_by_year_on_country_code", using: :btree
+    t.index ["artist_name"], name: "yearly_artist", using: :btree
     t.index ["trend_year"], name: "index_artists_by_year_on_trend_year", using: :btree
   end
 
@@ -202,6 +203,8 @@ ActiveRecord::Schema.define(version: 20160711163527) do
 
   create_table "people_by_date", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.date     "trend_date"
+    t.integer  "trend_month"
+    t.integer  "trend_year"
     t.integer  "person_id"
     t.string   "person_name"
     t.string   "email_address"
@@ -212,14 +215,15 @@ ActiveRecord::Schema.define(version: 20160711163527) do
     t.integer  "song_download_count"
     t.datetime "created_at",           null: false
     t.datetime "updated_at",           null: false
-    t.index ["country_code"], name: "index_people_by_date_on_country_code", using: :btree
-    t.index ["person_id"], name: "index_people_by_date_on_person_id", using: :btree
+    t.index ["person_id", "person_name", "email_address"], name: "daily_person", using: :btree
+    t.index ["trend_date", "person_id", "person_name", "email_address"], name: "date_and_person", using: :btree
     t.index ["trend_date"], name: "index_people_by_date_on_trend_date", using: :btree
+    t.index ["trend_month", "person_id", "person_name", "email_address", "country_code", "country_name"], name: "people_by_month", using: :btree
   end
 
   create_table "people_by_month", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "trend_month"
-    t.string   "trend_month_display"
+    t.integer  "trend_year"
     t.integer  "person_id"
     t.string   "person_name"
     t.string   "email_address"
@@ -230,9 +234,10 @@ ActiveRecord::Schema.define(version: 20160711163527) do
     t.integer  "song_download_count"
     t.datetime "created_at",           null: false
     t.datetime "updated_at",           null: false
-    t.index ["country_code"], name: "index_people_by_month_on_country_code", using: :btree
-    t.index ["person_id"], name: "index_people_by_month_on_person_id", using: :btree
+    t.index ["person_id", "person_name", "email_address"], name: "monthly_person", using: :btree
+    t.index ["trend_month", "person_id", "person_name", "email_address"], name: "month_and_person", using: :btree
     t.index ["trend_month"], name: "index_people_by_month_on_trend_month", using: :btree
+    t.index ["trend_year", "person_id", "person_name", "email_address", "country_code", "country_name"], name: "people_by_year", using: :btree
   end
 
   create_table "people_by_year", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
@@ -247,8 +252,7 @@ ActiveRecord::Schema.define(version: 20160711163527) do
     t.integer  "song_download_count"
     t.datetime "created_at",           null: false
     t.datetime "updated_at",           null: false
-    t.index ["country_code"], name: "index_people_by_year_on_country_code", using: :btree
-    t.index ["person_id"], name: "index_people_by_year_on_person_id", using: :btree
+    t.index ["person_id", "person_name", "email_address"], name: "yearly_person", using: :btree
     t.index ["trend_year"], name: "index_people_by_year_on_trend_year", using: :btree
   end
 
