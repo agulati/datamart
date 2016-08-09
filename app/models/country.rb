@@ -1,3 +1,3 @@
 class Country < ActiveRecord::Base
-  establish_connection :operational
+  establish_connection TUNECORE_DB
 end

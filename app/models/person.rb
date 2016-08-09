@@ -1,5 +1,6 @@
 class Person < ActiveRecord::Base
-  establish_connection :operational
+  establish_connection TUNECORE_DB
+
   has_many :albums
 
   def self.exclude_ids

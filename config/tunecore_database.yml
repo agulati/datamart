@@ -1,0 +1,18 @@
+default: &default
+  encoding: utf8
+  adapter: mysql2
+  port: 3306
+
+development:
+  <<: *default
+  database: tc_prod
+  host: 54.173.4.72
+  username: tc_staff_rw
+  password: THE1trueBushido!
+
+test:
+  <<: *default
+  host: localhost
+  username: root
+  password: tunecore
+  database: tunecore_production

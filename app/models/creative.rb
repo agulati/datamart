@@ -1,5 +1,6 @@
 class Creative < ActiveRecord::Base
-  self.establish_connection :operational
+  establish_connection TUNECORE_DB
+
   belongs_to :creativeable, polymorphic: true
   belongs_to :artist
 end
