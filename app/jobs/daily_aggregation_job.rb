@@ -22,9 +22,9 @@ class DailyAggregationJob
     AlbumsByDate.where(trend_date: @date).delete_all
 
     Rails.logger.info "Query distinct album ids"
-    albums      = DetailSummary.select(:album_id).where(date: @date).distinct.limit(100)
+    albums      = DetailSummary.select(:album_id).where(date: @date).distinct
     @num_albums = albums.length
-    Rails.logger.info "Found #{@num_albums} albums, beginning aggregation"
+    Rails.logger.info "Found #{@num_albums} albums, beginning aggregation for #{@date}"
 
     albums.each do |album|
       $redis.sadd(@working_queue_key, album.album_id)
