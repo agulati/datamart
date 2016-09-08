@@ -1,0 +1,11 @@
+development:
+  job: "dummy"
+  host: "dummy"
+  user: "dummy"
+  password: "dummy"
+
+test:
+  job: "dummy"
+  host: "dummy"
+  user: "dummy"
+  password: "dummy"

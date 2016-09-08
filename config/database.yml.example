@@ -1,0 +1,18 @@
+default: &default
+  encoding: utf8
+  adapter: mysql2
+  port: 3306
+
+development:
+  <<: *default
+  host: localhost
+  username:
+  password:
+  database: trends_dw
+
+test:
+  <<: *default
+  host: localhost
+  username:
+  password:
+  database: trends_dw_test

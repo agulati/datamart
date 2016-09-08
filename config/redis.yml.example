@@ -1,0 +1,14 @@
+development:
+  server: localhost
+  port: 6379
+  password:
+
+test:
+  server: localhost
+  port: 6379
+  password:
+
+staging:
+  server: localhost
+  port: 6379
+  password:

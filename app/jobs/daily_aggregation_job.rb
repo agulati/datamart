@@ -1,5 +1,5 @@
 class DailyAggregationJob
-  @queue = :aggregation
+  @queue = :controller
 
   def self.perform date=Date.yesterday
     new(date).populate_aggregates
@@ -31,6 +31,9 @@ class DailyAggregationJob
       Resque.enqueue(AggregateAlbumByDateJob, @date, album.album_id)
     end
 
+    scaler = ScalingService.new(num_jobs: albums.length)
+    scaler.scale_workers
+
     repeat_count        = 0
     previous_remaining  = 0
     while ( num_remaining = $redis.scard(@working_queue_key) ) > 0
@@ -57,5 +60,7 @@ class DailyAggregationJob
     Rails.logger.error "Error completing album aggregation for #{@date}: #{e.message}"
     log_record.update_attributes(status: AggregationLog::ERROR)
     raise e
+  ensure
+    scaler.retire_workers if scaler
   end
 end

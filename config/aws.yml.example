@@ -1,0 +1,17 @@
+development:
+  access_key: "dummy"
+  secret_access_key: "dummy"
+  image_id: "dummy"
+  key_name: "dummy"
+  instance_type: "dummy"
+  subnet_id: "dummy"
+  security_group: "dummy"
+
+test:
+  access_key: "dummy"
+  secret_access_key: "dummy"
+  image_id: "dummy"
+  key_name: "dummy"
+  instance_type: "dummy"
+  subnet_id: "dummy"
+  security_group: "dummy"
