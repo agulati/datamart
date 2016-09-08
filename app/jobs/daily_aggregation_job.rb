@@ -53,6 +53,8 @@ class DailyAggregationJob
     Rails.logger.info "Completed album by date aggregation"
     log_record.update_attributes(status: AggregationLog::COMPLETED)
 
+    scaler.retire_workers if scaler
+
     Resque.enqueue(AggregationRollupJob, @date, "album", "month")
     Resque.enqueue(AggregationRollupJob, @date, "person", "date")
     Resque.enqueue(AggregationRollupJob, @date, "artist", "date")

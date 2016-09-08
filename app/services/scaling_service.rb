@@ -38,7 +38,7 @@ class ScalingService
   private
 
   def num_instances
-    @num_instances = [(@num_jobs / JOBS_PER_INSTANCE) + ( @num_jobs % JOBS_PER_INSTANCE > 0 ? 1 : 0), MAX_INSTANCES].min
+    [(@num_jobs / JOBS_PER_INSTANCE) + ( @num_jobs % JOBS_PER_INSTANCE > 0 ? 1 : 0), MAX_INSTANCES].min
   end
 
   def instance_running? instance_id
