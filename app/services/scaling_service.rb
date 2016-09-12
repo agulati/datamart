@@ -27,11 +27,13 @@ class ScalingService
         sleep(10)
       end
 
+      Rails.logger.info "Deploying worker code on #{instance.instance_id}"
       $jenkins_client.job.build(JENKINS_CONFIG["job"], { host: hostname(instance.instance_id) }, { 'build_start_timeout' => 30 } )
     end
   end
 
   def retire_workers
+    Rails.logger.info "Retiring workers: #{@worker_instances}"
     $ec2.terminate_instances({ instance_ids: @worker_instances }) if @worker_instances && !@worker_instances.empty?
   end
 
