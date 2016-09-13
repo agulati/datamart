@@ -1,7 +1,7 @@
 class ScalingService
 
-  MAX_INSTANCES     = 10
-  JOBS_PER_INSTANCE = 20
+  MAX_INSTANCES     = 20
+  JOBS_PER_INSTANCE = 5
 
   def initialize num_jobs:
     @num_jobs = num_jobs
@@ -30,6 +30,8 @@ class ScalingService
       Rails.logger.info "Deploying worker code on #{instance.instance_id}"
       $jenkins_client.job.build(JENKINS_CONFIG["job"], { host: hostname(instance.instance_id) }, { 'build_start_timeout' => 30 } )
     end
+  rescue => e
+    Rails.logger.error "Error scaling workers: #{e.message}"
   end
 
   def retire_workers

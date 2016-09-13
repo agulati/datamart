@@ -26,20 +26,22 @@ class DailyAggregationJob
     @num_albums = albums.length
     Rails.logger.info "Found #{@num_albums} albums, beginning aggregation for #{@date}"
 
+    scaler = ScalingService.new(num_jobs: albums.length)
+    scaler.scale_workers
+
     albums.each do |album|
       $redis.sadd(@working_queue_key, album.album_id)
       Resque.enqueue(AggregateAlbumByDateJob, @date, album.album_id)
     end
 
-    scaler = ScalingService.new(num_jobs: albums.length)
-    scaler.scale_workers
-
     repeat_count        = 0
     previous_remaining  = 0
-    while ( num_remaining = $redis.scard(@working_queue_key) ) > 0
+    retry_count         = 0
+    while ( num_remaining = $redis.scard(@working_queue_key) ) > 0 && retry_count < 5
       repeat_count += 1 if previous_remaining == num_remaining
 
       if repeat_count >= 5
+        retry_count += 1
         Rails.logger.info "Re-queueing remaining albums"
         $redis.smembers(@working_queue_key).each { |a| Resque.enqueue(AggregateAlbumByDateJob, @date, a) }
         repeat_count = 0
@@ -52,8 +54,6 @@ class DailyAggregationJob
 
     Rails.logger.info "Completed album by date aggregation"
     log_record.update_attributes(status: AggregationLog::COMPLETED)
-
-    scaler.retire_workers if scaler
 
     Resque.enqueue(AggregationRollupJob, @date, "album", "month")
     Resque.enqueue(AggregationRollupJob, @date, "person", "date")
