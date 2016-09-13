@@ -1,7 +1,7 @@
 class ScalingService
 
   MAX_INSTANCES     = 20
-  JOBS_PER_INSTANCE = 5
+  JOBS_PER_INSTANCE = 10
 
   def initialize num_jobs:
     @num_jobs = num_jobs
@@ -20,6 +20,7 @@ class ScalingService
     Rails.logger.info "Launched #{response.instances.length} worker instances"
 
     @worker_instances = response.instances.map(&:instance_id)
+    $ec2.create_tags({ resources: @worker_instances, tags: [{ key: "Name", value: "Trends Worker" }] })
 
     response.instances.each do |instance|
       until instance_running?(instance.instance_id) do
@@ -27,11 +28,16 @@ class ScalingService
         sleep(10)
       end
 
-      Rails.logger.info "Deploying worker code on #{instance.instance_id}"
-      $jenkins_client.job.build(JENKINS_CONFIG["job"], { host: hostname(instance.instance_id) }, { 'build_start_timeout' => 30 } )
+      begin
+        Rails.logger.info "Deploying worker code on #{instance.instance_id}"
+        $jenkins_client.job.build(JENKINS_CONFIG["job"], { host: hostname(instance.instance_id) }, { 'build_start_timeout' => 30 } )
+      rescue => e
+        Rails.logger.error "Unable to deploy worker code to #{instance.instance_id}: #{e.message}"
+        Rails.logger.error e.backtrace.join("\n\t")
+        $ec2.terminate_instances({ instance_ids: [instance.instance_id] })
+        @worker_instances.delete(instance.instance_id)
+      end
     end
-  rescue => e
-    Rails.logger.error "Error scaling workers: #{e.message}"
   end
 
   def retire_workers
