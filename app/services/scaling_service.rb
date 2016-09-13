@@ -1,7 +1,7 @@
 class ScalingService
 
   MAX_INSTANCES     = 20
-  JOBS_PER_INSTANCE = 10
+  JOBS_PER_INSTANCE = 5
 
   def initialize num_jobs:
     @num_jobs = num_jobs
@@ -25,12 +25,15 @@ class ScalingService
     response.instances.each do |instance|
       until instance_running?(instance.instance_id) do
         Rails.logger.info "Waiting for #{instance.instance_id} to start. Current status: #{instance_state(instance.instance_id)}"
+        # Allow instance time to start up properly
         sleep(10)
       end
 
       begin
         Rails.logger.info "Deploying worker code on #{instance.instance_id}"
         $jenkins_client.job.build(JENKINS_CONFIG["job"], { host: hostname(instance.instance_id) }, { 'build_start_timeout' => 30 } )
+        # Allow jenkins jobs time to run because there is a limit on how many can run concurrently
+        sleep(30)
       rescue => e
         Rails.logger.error "Unable to deploy worker code to #{instance.instance_id}: #{e.message}"
         Rails.logger.error e.backtrace.join("\n\t")

@@ -60,6 +60,7 @@ class DailyAggregationJob
     Resque.enqueue(AggregationRollupJob, @date, "artist", "date")
   rescue => e
     Rails.logger.error "Error completing album aggregation for #{@date}: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n\t")
     log_record.update_attributes(status: AggregationLog::ERROR)
     raise e
   ensure
