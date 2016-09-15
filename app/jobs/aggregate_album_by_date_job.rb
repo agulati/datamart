@@ -35,7 +35,7 @@ class AggregateAlbumByDateJob
           album_id:       album.id,
           album_name:     album.name,
           album_type:     album.album_type,
-          artist_name:    album.primary_artists,
+          artist_name:    album.primary_artists[0...255],
           person_id:      album.person_id,
           person_name:    album.person.name,
           email_address:  album.person.email,
