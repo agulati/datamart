@@ -34,20 +34,24 @@ class AggregationRollupJob
                 .group(*select)
 
     data  = source_table.find_by_sql(sql)
-    data.each do |row|
+
+    Rails.logger.info "Creating #{data.length} rows in #{target_table.to_s}"
+    data.each_with_index do |row, index|
       target_row = target_table.new
       row.attributes.reject { |k,v| k == "id" }.each { |col, val| target_row[col] = val }
       target_row.save!
+      Rails.logger.info "Saved #{index + 1}/#{data.length} rows" if (index + 1) % 100 == 0
     end
 
     enqueue_next
 
     Rails.logger.info "Completed #{@dimension} by #{@granularity} aggregation"
     log_record.update_attributes(status: AggregationLog::COMPLETED)
-  # rescue => e
-  #   Rails.logger.error "Error completing #{@dimension} by #{@granularity} aggregation for #{@date}: #{e.message}"
-  #   log_record.update_attributes(status: AggregationLog::ERROR)
-  #   raise e
+  rescue => e
+    Rails.logger.error "Error completing #{@dimension} by #{@granularity} aggregation for #{@date}: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n\t")
+    log_record.update_attributes(status: AggregationLog::ERROR)
+    raise e
   end
 
   def target_table
