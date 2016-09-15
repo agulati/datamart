@@ -51,10 +51,8 @@ class ScalingService
     @worker_instances.each do |instance_id|
       begin
         Rails.logger.info "Retiring worker: #{instance_id}"
+        Resque.workers.select { |w| resque_worker_ip(w) == private_dns_name(instance_id)}.each { |worker| worker.unregister_worker }
         $ec2.terminate_instances({ instance_ids: [instance_id] })
-        Resque.workers.select { |w| resque_worker_ip(w) == private_dns_name(instance_id)}.each do |worker|
-          worker.unregister_worker
-        end
       rescue => e
         Rails.logger.error "Error retiring worker #{instance_id}: #{e.message}"
         Rails.logger.error e.backtrace.join("\n\t")

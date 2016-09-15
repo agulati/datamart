@@ -1,5 +1,5 @@
 class AggregationRollupJob
-  @queue = :aggregation
+  @queue = :rollups
 
   # Order matters for GRANULARITIES (see next_keys)
   GRANULARITIES = ["date", "month", "year"]

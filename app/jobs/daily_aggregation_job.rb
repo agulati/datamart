@@ -1,5 +1,5 @@
 class DailyAggregationJob
-  @queue = :controller
+  @queue = :scheduled
 
   def self.perform date=Date.yesterday
     new(date).populate_aggregates
