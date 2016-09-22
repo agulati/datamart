@@ -22,7 +22,7 @@ class ScalingService
     @worker_instances = response.instances.map(&:instance_id)
     $ec2.create_tags({ resources: @worker_instances, tags: [{ key: "Name", value: "Trends Worker" }] })
 
-    response.instances.each do |instance|
+    response.instances.each_with_index do |instance, index|
       until instance_running?(instance.instance_id) do
         Rails.logger.info "Waiting for #{instance.instance_id} to start. Current status: #{instance_state(instance.instance_id)}"
 
@@ -31,7 +31,7 @@ class ScalingService
       end
 
       begin
-        Rails.logger.info "Deploying worker code on #{instance.instance_id}"
+        Rails.logger.info "Deploying worker code on #{instance.instance_id} (#{index+1}/#{response.instances.length})"
         $jenkins_client.job.build(JENKINS_CONFIG["job"], { host: hostname(instance.instance_id) }, { "build_start_timeout" => 30 } )
 
         # Allow jenkins jobs time to run because there is a limit on how many can run concurrently
