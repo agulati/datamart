@@ -1,6 +1,8 @@
 class AggregateAlbumByDateJob
   @queue = :albums
 
+  BATCH_SIZE = 5000
+
   def self.perform date, album_id
     AlbumsByDate.where(trend_date: date, album_id: album_id).delete_all
 
@@ -27,6 +29,7 @@ class AggregateAlbumByDateJob
       album_data    = DetailSummary.find_by_sql(sql)
       country_rows  = album_data.group_by(&:country_code)
 
+      aggregate_rows = []
       country_rows.keys.each do |country_code|
         aggregate_row = AlbumsByDate.new({
           trend_date:     date,
@@ -47,8 +50,9 @@ class AggregateAlbumByDateJob
         aggregate_row.album_download_count  = country_rows[country_code].select { |row| row.trans_type_id == 2 }.sum(&:qty)
         aggregate_row.song_download_count   = country_rows[country_code].select { |row| row.trans_type_id == 1 }.sum(&:qty)
 
-        aggregate_row.save!
+        aggregate_rows << aggregate_row
       end
+      AlbumsByDate.import(aggregate_rows, batch_size: BATCH_SIZE)
     end
 
     $redis.srem("tc_trends::aggregation::albums::#{date}", album_id)
