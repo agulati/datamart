@@ -1,7 +1,6 @@
 class AggregationRollupJob
-  @queue = :rollups
-
-  BATCH_SIZE    = 5000
+  @queue        = :rollups
+  BATCH_SIZE    = 10000
 
   # Order matters for GRANULARITIES (see next_keys)
   GRANULARITIES = ["date", "month", "year"]
@@ -37,14 +36,19 @@ class AggregationRollupJob
 
     data  = source_table.find_by_sql(sql)
 
-    Rails.logger.info "Creating #{data.length} rows in #{target_table.to_s}"
+    Rails.logger.info "Creating #{data.length} rows for #{target_table.to_s}"
     aggregated_rows = []
     data.each_with_index do |row, index|
       target_row = target_table.new
       row.attributes.reject { |k,v| k == "id" }.each { |col, val| target_row[col] = val }
       aggregated_rows << target_row
+
+      if aggregated_rows.length >= BATCH_SIZE || index == (data.length - 1)
+        Rails.logger.info "Importing #{aggregated_rows.length} rows into #{target_table.to_s}"
+        target_table.import(aggregated_rows)
+        aggregated_rows = []
+      end
     end
-    target_table.import(aggregated_rows, batch_size: BATCH_SIZE)
 
     enqueue_next
 
