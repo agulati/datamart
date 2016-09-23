@@ -34,6 +34,8 @@ class AggregationRollupJob
                 .where(src[key_columns.first].eq(send("#{@granularity}_key".to_sym)))
                 .group(*select)
 
+    Rails.logger.info "Querying aggregate data: #{sql.to_s}"
+
     data  = source_table.find_by_sql(sql)
 
     Rails.logger.info "Creating #{data.length} rows for #{target_table.to_s}"
@@ -54,7 +56,7 @@ class AggregationRollupJob
 
     Rails.logger.info "Completed #{@dimension} by #{@granularity} aggregation"
     log_record.update_attributes(status: AggregationLog::COMPLETED)
-  rescue => e
+  rescue Exception => e
     Rails.logger.error "Error completing #{@dimension} by #{@granularity} aggregation for #{@date}: #{e.message}"
     Rails.logger.error e.backtrace.join("\n\t")
     log_record.update_attributes(status: AggregationLog::ERROR)
