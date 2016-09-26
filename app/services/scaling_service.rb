@@ -1,17 +1,16 @@
 class ScalingService
 
-  MAX_INSTANCES     = 20
-  JOBS_PER_INSTANCE = 5
-
-  def initialize num_jobs:
-    @num_jobs = num_jobs
+  def initialize queue:, num_instances: , num_processes:
+    @queue          = queue
+    @num_instances  = num_instances
+    @num_processes  = num_processes
   end
 
   def scale_workers
     response = $ec2.run_instances({
       image_id:           AWS_CONFIG["image_id"],
       min_count:          1,
-      max_count:          num_instances,
+      max_count:          @num_instances,
       key_name:           AWS_CONFIG["key_name"],
       instance_type:      AWS_CONFIG["instance_type"],
       network_interfaces: [ { subnet_id: AWS_CONFIG["subnet_id"], device_index: 0, associate_public_ip_address: true, groups: [ AWS_CONFIG["security_group"] ] } ]
@@ -32,7 +31,7 @@ class ScalingService
 
       begin
         Rails.logger.info "Deploying worker code on #{instance.instance_id} (#{index+1}/#{response.instances.length})"
-        $jenkins_client.job.build(JENKINS_CONFIG["job"], { host: hostname(instance.instance_id) }, { "build_start_timeout" => 30 } )
+        $jenkins_client.job.build(JENKINS_CONFIG["job"], { host: hostname(instance.instance_id), queue: @queue, count: @num_processes } )
 
         # Allow jenkins jobs time to run because there is a limit on how many can run concurrently
         sleep(30)
@@ -51,20 +50,18 @@ class ScalingService
     @worker_instances.each do |instance_id|
       begin
         Rails.logger.info "Retiring worker: #{instance_id}"
-        Resque.workers.select { |w| resque_worker_ip(w) == private_dns_name(instance_id)}.each { |worker| worker.unregister_worker }
+        Resque.workers.select { |w| resque_worker_ip(w) == private_dns_name(instance_id)}.each { |worker| `kill -3 #{worker.pid}` }
         $ec2.terminate_instances({ instance_ids: [instance_id] })
       rescue => e
         Rails.logger.error "Error retiring worker #{instance_id}: #{e.message}"
         Rails.logger.error e.backtrace.join("\n\t")
       end
     end
+
+    @worker_instances = []
   end
 
   private
-
-  def num_instances
-    [(@num_jobs / JOBS_PER_INSTANCE) + ( @num_jobs % JOBS_PER_INSTANCE > 0 ? 1 : 0), MAX_INSTANCES].min
-  end
 
   def instance_running? instance_id
     instance_state(instance_id) == "running"

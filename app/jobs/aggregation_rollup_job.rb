@@ -6,17 +6,18 @@ class AggregationRollupJob
   GRANULARITIES = ["date", "month", "year"]
   DIMENSIONS    = ["album", "person", "artist"]
 
-  def self.perform date, dimension, granularity
+  def self.perform date, dimension, granularity, enqueue_next_rollup=true
     raise "Invalid dimension #{dimension}: Accepted values are #{DIMENSIONS.join(", ")}"        unless DIMENSIONS.include?(dimension)
     raise "Invalid granularity #{granularity}: Accepted values are #{GRANULARITIES.join(", ")}" unless GRANULARITIES.include?(granularity)
 
-    new(date, dimension, granularity).perform
+    new(date: date, dimension: dimension, granularity: granularity).perform
   end
 
-  def initialize date, dimension, granularity
-    @date         = Date.strptime(date)
-    @dimension    = dimension
-    @granularity  = granularity
+  def initialize date:, dimension:, granularity:, enqueue_next_rollup:
+    @date                 = Date.strptime(date)
+    @dimension            = dimension
+    @granularity          = granularity
+    @enqueue_next_rollup  = enqueue_next_rollup
   end
 
   def perform
@@ -51,7 +52,7 @@ class AggregationRollupJob
       end
     end
 
-    enqueue_next
+    enqueue_next if @enqueue_next_rollup
 
     Rails.logger.info "Completed #{@dimension} by #{@granularity} aggregation"
     log_record.update_attributes(status: AggregationLog::COMPLETED)

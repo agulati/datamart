@@ -1,13 +1,17 @@
 class DailyAggregationJob
   @queue = :scheduled
 
-  def self.perform date=Date.yesterday
-    new(date).populate_aggregates
+  MAX_INSTANCES         = 20
+  WORKERS_PER_INSTANCE  = 5
+
+  def self.perform date=Date.yesterday, perform_rollups=true
+    new(date: date, perform_rollups: perform_rollups).populate_aggregates
   end
 
-  def initialize date
+  def initialize date:, perform_rollups:
     @date               = date
     @working_queue_key  = "tc_trends::aggregation::albums::#{date}"
+    @perform_rollups    = perform_rollups
   end
 
   def populate_aggregates
@@ -24,9 +28,14 @@ class DailyAggregationJob
     Rails.logger.info "Query distinct album ids"
     albums      = DetailSummary.select(:album_id).where(date: @date).distinct
     @num_albums = albums.length
-    Rails.logger.info "Found #{@num_albums} albums, beginning aggregation for #{@date}"
 
-    scaler = ScalingService.new(num_jobs: albums.length)
+    if @num_albums > 0
+      Rails.logger.info "Found #{@num_albums} albums, beginning aggregation for #{@date}"
+    else
+      Rails.logger.info "No data available yet for #{@data}" and return
+    end
+
+    scaler = ScalingService.new(queue: "albums", num_instances: servers_to_scale, num_processes: WORKERS_PER_INSTANCE )
     scaler.scale_workers
 
     albums.each do |album|
@@ -55,9 +64,23 @@ class DailyAggregationJob
     Rails.logger.info "Completed album by date aggregation"
     log_record.update_attributes(status: AggregationLog::COMPLETED)
 
-    Resque.enqueue(AggregationRollupJob, @date, "album", "month")
-    Resque.enqueue(AggregationRollupJob, @date, "person", "date")
-    Resque.enqueue(AggregationRollupJob, @date, "artist", "date")
+    if @perform_rollups
+      $redis.set("rollups:#{@date.to_s}", "0")
+
+      rollup_scaler = ScalingService.new(queue: "rollups", num_instances: 3, num_processes: 1)
+      rollup_scaler.scale_workers
+      [ { granularity: "month", dimension: "album" }, { granularity: "date", dimension: "person" }, { granularity: "date", dimension: "artist" }].each do |rollup|
+        $redis.incr("rollups:#{@date.to_s}")
+        Resque.enqueue(AggregationRollupJob, @date, rollup[:dimension], rollup[:granularity])
+      end
+
+      while( in_progress = $redis.get("rollups:#{@date.to_s}").to_i > 0 ) do
+        Rails.logger.info "Waiting for rollups to complete (#{in_progress} remaining)"
+        sleep(300)
+      end
+
+      rollup_scaler.retire_workers if $redis.get("rollups:#{@date.to_s}").to_i == 0
+    end
   rescue => e
     Rails.logger.error "Error completing album aggregation for #{@date}: #{e.message}"
     Rails.logger.error e.backtrace.join("\n\t")
@@ -65,5 +88,10 @@ class DailyAggregationJob
     raise e
   ensure
     scaler.retire_workers if scaler
+    rollup_scaler.retire_workers if rollup_scaler
+  end
+
+  def servers_to_scale
+    [@num_albums / WORKERS_PER_INSTANCE, MAX_INSTANCES].min
   end
 end
