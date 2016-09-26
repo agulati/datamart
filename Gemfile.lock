@@ -9,6 +9,13 @@ GIT
       rack-protection (~> 1.5)
       tilt (~> 2.0)
 
+GIT
+  remote: git@github.com:tunecore/will_paginate-bootstrap.git
+  revision: 3cabf759ceb782a7d0a792b610636375e7924fb5
+  specs:
+    will_paginate-bootstrap (1.0.1.pre.v4alpha)
+      will_paginate (>= 3.0.3)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -52,12 +59,17 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     arel (7.0.0)
+    autoprefixer-rails (6.4.1.1)
+      execjs
     aws-sdk (2.5.8)
       aws-sdk-resources (= 2.5.8)
     aws-sdk-core (2.5.8)
       jmespath (~> 1.0)
     aws-sdk-resources (2.5.8)
       aws-sdk-core (= 2.5.8)
+    bootstrap (4.0.0.alpha4)
+      autoprefixer-rails (>= 6.0.3)
+      sass (>= 3.4.19)
     builder (3.2.2)
     byebug (9.0.5)
     coffee-rails (4.2.1)
@@ -225,6 +237,7 @@ GEM
     websocket-driver (0.6.4)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.2)
+    will_paginate (3.1.3)
 
 PLATFORMS
   ruby
@@ -232,6 +245,7 @@ PLATFORMS
 DEPENDENCIES
   activerecord-import
   aws-sdk
+  bootstrap (= 4.0.0.alpha4)
   byebug
   coffee-rails (~> 4.2)
   jbuilder (~> 2.5)
@@ -252,6 +266,7 @@ DEPENDENCIES
   tzinfo-data
   uglifier (>= 1.3.0)
   web-console
+  will_paginate-bootstrap!
 
 BUNDLED WITH
    1.12.5

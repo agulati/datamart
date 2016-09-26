@@ -34,8 +34,7 @@ class AggregationRollupJob
                 .where(src[key_columns.first].eq(send("#{@granularity}_key".to_sym)))
                 .group(*select)
 
-    Rails.logger.info "Querying aggregate data: #{sql.to_s}"
-
+    Rails.logger.info "Querying aggregate data: #{sql.to_sql}"
     data  = source_table.find_by_sql(sql)
 
     Rails.logger.info "Creating #{data.length} rows for #{target_table.to_s}"
@@ -72,6 +71,7 @@ class AggregationRollupJob
   end
 
   def reset_data
+    Rails.logger.info "Deleting old rollups for #{target_table.to_s}"
     target_table.where(target_table.arel_table[key_columns.first].eq(send("#{@granularity}_key".to_sym))).delete_all
   end
 
