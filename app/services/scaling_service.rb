@@ -50,7 +50,10 @@ class ScalingService
     @worker_instances.each do |instance_id|
       begin
         Rails.logger.info "Retiring worker: #{instance_id}"
-        Resque.workers.select { |w| resque_worker_ip(w) == private_dns_name(instance_id)}.each { |worker| `kill -3 #{worker.pid}` }
+        $jenkins_client.job.build(JENKINS_CONFIG["shutdown_job"], { host: hostname(instance_id), instance: private_dns_name(instance_id) } )
+
+        # Allow graceful shutdown of worker processes to complete
+        sleep(60)
         $ec2.terminate_instances({ instance_ids: [instance_id] })
       rescue => e
         Rails.logger.error "Error retiring worker #{instance_id}: #{e.message}"

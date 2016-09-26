@@ -10,7 +10,7 @@ namespace :aggregations do
         dates = ENV["DATES"].split(",").map { |date_string| Date.parse(date_string.strip, "%Y-%m-%d") }
       end
 
-      dates.each { |date| Resque.enqueue(DailyAggregationJob, date, ENV["PERFORM_ROLLUPS"] || false) }
+      dates.each { |date| Resque.enqueue(DailyAggregationJob, date, !!ENV["PERFORM_ROLLUPS"]) }
     rescue => e
       aggregation_log.update_attributes(status: "error")
       Rails.logger.info "Error aggregating album data for #{date}: #{e.message}"
