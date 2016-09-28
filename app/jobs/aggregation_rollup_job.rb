@@ -6,18 +6,19 @@ class AggregationRollupJob
   GRANULARITIES = ["date", "month", "year"]
   DIMENSIONS    = ["album", "person", "artist"]
 
-  def self.perform date, dimension, granularity, enqueue_next_rollup=true
+  def self.perform date, dimension, granularity, enqueue_next_rollup, process_token
     raise "Invalid dimension #{dimension}: Accepted values are #{DIMENSIONS.join(", ")}"        unless DIMENSIONS.include?(dimension)
     raise "Invalid granularity #{granularity}: Accepted values are #{GRANULARITIES.join(", ")}" unless GRANULARITIES.include?(granularity)
 
-    new(date: date, dimension: dimension, granularity: granularity).perform
+    new(date: date, dimension: dimension, granularity: granularity, enqueue_next_rollup: enqueue_next_rollup, process_token: process_token).perform
   end
 
-  def initialize date:, dimension:, granularity:, enqueue_next_rollup:
+  def initialize date:, dimension:, granularity:, enqueue_next_rollup:, process_token:
     @date                 = Date.strptime(date)
     @dimension            = dimension
     @granularity          = granularity
     @enqueue_next_rollup  = enqueue_next_rollup
+    @process_token        = process_token
   end
 
   def perform
@@ -61,6 +62,8 @@ class AggregationRollupJob
     Rails.logger.error e.backtrace.join("\n\t")
     log_record.update_attributes(status: AggregationLog::ERROR)
     raise e
+  ensure
+    $redis.del(@process_token)
   end
 
   def target_table
@@ -105,6 +108,6 @@ class AggregationRollupJob
   end
 
   def enqueue_next
-    Resque.enqueue(AggregationRollupJob, @date, @dimension, next_keys.first) if has_next_key?
+    Resque.enqueue(ScheduleAggregationRollupJob, @date, @dimension, next_keys.first, true) if has_next_key?
   end
 end

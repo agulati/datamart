@@ -29,6 +29,7 @@ gem "tzinfo-data",              platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 gem "resque"
 gem "resque-web"
 gem "resque-scheduler"
+gem "resque-tabber"
 gem "sinatra",                  github: "sinatra/sinatra", branch: "master"
 
 gem "aws-sdk"

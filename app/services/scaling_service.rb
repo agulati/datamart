@@ -50,7 +50,9 @@ class ScalingService
     @worker_instances.each do |instance_id|
       begin
         Rails.logger.info "Retiring worker: #{instance_id}"
-        $jenkins_client.job.build(JENKINS_CONFIG["shutdown_job"], { host: hostname(instance_id), instance: private_dns_name(instance_id) } )
+        worker_dns = private_dns_name(instance_id)
+        $jenkins_client.job.build(JENKINS_CONFIG["shutdown_job"], { host: hostname(instance_id), instance: worker_dns } )
+        Resque.workers.select { |worker| resque_worker_ip(instance_id) == worker_dns }.each { |worker| worker.unregister_worker }
 
         # Allow graceful shutdown of worker processes to complete
         sleep(60)

@@ -1,0 +1,3 @@
+<% @periods.each do |period| %>
+  $(".period-select").append("<option value=\"<%= period[:value] %>\"><%= period[:display] %></option>")
+<% end %>

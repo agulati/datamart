@@ -1,0 +1,75 @@
+<div class="row">
+  <div class="col-xs-12">
+    <h2>Aggregate Trends Data</h2>
+  </div>
+</div>
+<%= form_tag "/aggregations" do %>
+  <div class="row aggregation-form">
+    <div class="form-group col-xs-4">
+      <legend>Dimension</legend>
+      <div class="form-check">
+        <label class="form-check-label">
+          <%= radio_button_tag :dimension, "album", false, class: "form-check-input" %>
+          Albums
+        </label>
+      </div>
+      <div class="form-check">
+        <label class="form-check-label">
+          <%= radio_button_tag :dimension, "artist", false, class: "form-check-input" %>
+          Artists
+        </label>
+      </div>
+      <div class="form-check">
+        <label class="form-check-label">
+          <%= radio_button_tag :dimension, "person", false, class: "form-check-input" %>
+          People
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group col-xs-4">
+      <legend>Granularity</legend>
+      <div class="form-check">
+        <label class="form-check-label">
+          <%= radio_button_tag :granularity, "date", false, class: "form-check-input" %>
+          Daily
+        </label>
+      </div>
+      <div class="form-check">
+        <label class="form-check-label">
+          <%= radio_button_tag :granularity, "month", false, class: "form-check-input" %>
+          Monthly
+        </label>
+      </div>
+      <div class="form-check">
+        <label class="form-check-label">
+          <%= radio_button_tag :granularity, "year", false, class: "form-check-input" %>
+          Yearly
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group col-xs-4">
+      <legend>Period</legend>
+      <%= select_tag :period, nil, class: "period-select form-control" %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <%= submit_tag "Schedule Aggregation", class: "btn btn-primary pull-xs-right" %>
+    </div>
+  </div>
+<% end %>
+
+<% content_for :page_script do %>
+  <script type="text/javascript">
+    $("input[name='granularity']").on("click", function () {
+      $(".period-select").empty()
+      $.ajax({
+        url: "/periods",
+        type: "GET",
+        data: "granularity=" + $(this).val()
+      })
+    })
+  </script>
+<% end %>

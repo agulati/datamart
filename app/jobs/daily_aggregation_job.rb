@@ -1,10 +1,10 @@
 class DailyAggregationJob
-  @queue = :scheduled
+  @queue = :scheduled_daily
 
   MAX_INSTANCES         = 20
   WORKERS_PER_INSTANCE  = 5
 
-  def self.perform date=Date.yesterday, perform_rollups=true
+  def self.perform date=Date.yesterday, perform_rollups=false
     new(date: date, perform_rollups: perform_rollups).populate_aggregates
   end
 
@@ -65,21 +65,11 @@ class DailyAggregationJob
     log_record.update_attributes(status: AggregationLog::COMPLETED)
 
     if @perform_rollups
-      $redis.set("rollups:#{@date.to_s}", "0")
-
-      rollup_scaler = ScalingService.new(queue: "rollups", num_instances: 3, num_processes: 1)
-      rollup_scaler.scale_workers
-      [ { granularity: "month", dimension: "album" }, { granularity: "date", dimension: "person" }, { granularity: "date", dimension: "artist" }].each do |rollup|
-        $redis.incr("rollups:#{@date.to_s}")
-        Resque.enqueue(AggregationRollupJob, @date, rollup[:dimension], rollup[:granularity])
+      [ { granularity: "month", dimension: "album" },
+        { granularity: "date", dimension: "person" },
+        { granularity: "date", dimension: "artist" } ].each do |rollup|
+        Resque.enqueue(ScheduleAggregationRollupJob, @date, rollup[:dimension], rollup[:granularity], true)
       end
-
-      while( in_progress = $redis.get("rollups:#{@date.to_s}").to_i > 0 ) do
-        Rails.logger.info "Waiting for rollups to complete (#{in_progress} remaining)"
-        sleep(300)
-      end
-
-      rollup_scaler.retire_workers if $redis.get("rollups:#{@date.to_s}").to_i == 0
     end
   rescue => e
     Rails.logger.error "Error completing album aggregation for #{@date}: #{e.message}"
@@ -88,7 +78,6 @@ class DailyAggregationJob
     raise e
   ensure
     scaler.retire_workers if scaler
-    rollup_scaler.retire_workers if rollup_scaler
   end
 
   def servers_to_scale
