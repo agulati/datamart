@@ -59,7 +59,7 @@ class AggregateAlbumByDateJob
     $redis.srem("tc_trends::aggregation::albums::#{date}", album_id) unless single_run
 
   rescue Exception => e
-    Rails.logger.error "Error completing aggregation for album #{album_id} for #{date.strftime("%Y-%m-%d")}"
+    Rails.logger.error "Error completing aggregation for album #{album_id} for #{date}"
     Rails.logger.error e.message
     Rails.logger.error e.backtrace.join("\n\t")
     AlbumsByDate.where(trend_date: date, album_id: album_id).delete_all
