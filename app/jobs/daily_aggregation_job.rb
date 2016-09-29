@@ -46,12 +46,12 @@ class DailyAggregationJob
     repeat_count        = 0
     previous_remaining  = 0
     retry_count         = 0
-    while ( num_remaining = $redis.scard(@working_queue_key) ) > 0 && retry_count < 5
+    while ( num_remaining = $redis.scard(@working_queue_key) ) > 0 && retry_count < 3
       repeat_count += 1 if previous_remaining == num_remaining
 
-      if repeat_count >= 5
+      if repeat_count >= 3
         retry_count += 1
-        Rails.logger.info "Re-queueing remaining albums (#{retry_count}/5)"
+        Rails.logger.info "Re-queueing remaining albums (#{retry_count}/3 attempts)"
         $redis.smembers(@working_queue_key).each { |a| Resque.enqueue(AggregateAlbumByDateJob, @date, a) }
         repeat_count = 0
       end
