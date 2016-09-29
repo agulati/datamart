@@ -15,11 +15,11 @@ class DailyAggregationJob
   end
 
   def populate_aggregates
-    log_record = AggregationLog.create({
-      trend_date:       @date,
-      aggregation_type: "AlbumsByDate",
-      status:           AggregationLog::IN_PROGRESS
-    })
+    log_record = AggregationLog.where(
+      trend_date: @date,
+      aggregation_type: "AlbumsByDate"
+    ).first_or_create!
+    log_record.update_attributes(status: AggregationLog::IN_PROGRESS)
 
     Rails.logger.info "Remove any previously aggregated data"
     $redis.del(@working_queue_key)

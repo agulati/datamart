@@ -6,6 +6,7 @@ Rails.application.routes.draw do
 
   resources :aggregations, only: [:index, :new, :create]
   resources :periods, only: [:index]
+  resources :logs, only: [:index, :show]
 
   root to: "aggregations#index"
 end
