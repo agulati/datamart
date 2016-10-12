@@ -1,8 +1,8 @@
 class DailyAggregationJob
   @queue = :scheduled_daily
 
-  MAX_INSTANCES         = 20
-  WORKERS_PER_INSTANCE  = 5
+  MAX_INSTANCES         = 50
+  WORKERS_PER_INSTANCE  = 2
 
   def self.perform date=Date.yesterday, perform_rollups=false
     new(date: date, perform_rollups: perform_rollups).populate_aggregates
@@ -52,7 +52,7 @@ class DailyAggregationJob
       if repeat_count >= 3
         retry_count += 1
         Rails.logger.info "Re-queueing remaining albums (#{retry_count}/3 attempts)"
-        $redis.smembers(@working_queue_key).each { |a| Resque.enqueue(AggregateAlbumByDateJob, @date, a) }
+        $redis.smembers(@working_queue_key).each { |a| Resque.enqueue(AggregateAlbumByDateJob, @date, a.to_i) }
         repeat_count = 0
       end
 
@@ -61,10 +61,15 @@ class DailyAggregationJob
       sleep(60)
     end
 
-    Rails.logger.info "Completed album by date aggregation"
-    log_record.update_attributes(status: AggregationLog::COMPLETED)
+    if num_remaining == 0
+      Rails.logger.info "Completed album by date aggregation"
+      log_record.update_attributes(status: AggregationLog::COMPLETED)
+    else
+      Rails.logger.info "Not all albums were successfully aggregated"
+      log_record.update_attributes(status: AggregationLog::ERROR)
+    end
 
-    if @perform_rollups
+    if @perform_rollups && num_remaining == 0
       [ { granularity: "month", dimension: "album" },
         { granularity: "date", dimension: "person" },
         { granularity: "date", dimension: "artist" } ].each do |rollup|
