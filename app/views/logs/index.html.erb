@@ -1,21 +1,26 @@
+<% content_for :head_content do %>
+<meta http-equiv="refresh" content="<%= @refresh_interval %>" />
+<% end %>
+
 <div class="row">
   <div class="col-xs-12">
-    <h2>Log Files</h2>
-  </div>
-</div>
-<div class="row">
-  <div class="col-xs-12">
-    <% @log_rows.keys.each do |day| %>
-      <table class="log-table table table-striped">
-        <thead class="thead-inverse">
-          <tr><th><%= day %></th></tr>
-        </thead>
-        <tbody>
-          <% @log_rows[day].each do |row| %>
-            <tr><td class="log-item"><%= row.chomp %></td></th>
-          <% end %>
-        </tbody>
-      </table>
-    <% end %>
+    <table class="log-table table table-striped">
+      <thead class="thead-inverse">
+        <tr>
+          <th>
+            Log File for <%= @day %>
+          </th>
+          <th class="log-nav">
+            <%= link_to "&laquo; Previous".html_safe, logs_path(day: (Date.strptime(@day) - 1.day).to_s), class: "log-arrow" %>
+            <%= link_to "Next &raquo;".html_safe, logs_path(day: (Date.strptime(@day) + 1.day).to_s), class: "log-arrow" %>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @log_rows.each do |row| %>
+          <tr><td colspan="2" title="<%=row%>" class="log-item"><%= row.chomp %></td></th>
+        <% end %>
+      </tbody>
+    </table>
   </div>
 </div>

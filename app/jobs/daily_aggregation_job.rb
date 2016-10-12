@@ -2,7 +2,7 @@ class DailyAggregationJob
   @queue = :scheduled_daily
 
   MAX_INSTANCES         = 50
-  WORKERS_PER_INSTANCE  = 2
+  WORKERS_PER_INSTANCE  = 1
 
   def self.perform date=Date.yesterday, perform_rollups=false
     new(date: date, perform_rollups: perform_rollups).populate_aggregates
