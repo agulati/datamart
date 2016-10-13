@@ -31,10 +31,12 @@ class ScalingService
 
       begin
         Rails.logger.info "Deploying worker code on #{instance.instance_id} (#{index+1}/#{response.instances.length})"
-        $jenkins_client.job.build(JENKINS_CONFIG["job"], { host: hostname(instance.instance_id), queue: @queue, count: @num_processes } )
+        jenkins_params  = { host: hostname(instance.instance_id), queue: @queue, count: @num_processes }
+        jenkins_opts    = { "build_start_timeout" => 60, "cancel_on_build_start_timeout" => true  }
+        build_num       = $jenkins_client.job.build( JENKINS_CONFIG["job"], jenkins_params, jenkins_opts )
+        job_response    = $jenkins_client.job.get_build_details(JENKINS_CONFIG["job"], build_num)
 
-        # Allow jenkins jobs time to run because there is a limit on how many can run concurrently
-        sleep(30)
+        raise "Jenkins deploy failed for #{job_response["fullDisplayName"]}" unless job_response["result"] == "SUCCESS"
       rescue => e
         Rails.logger.error "Unable to deploy worker code to #{instance.instance_id}: #{e.message}"
         Rails.logger.error e.backtrace.join("\n\t")
@@ -51,11 +53,7 @@ class ScalingService
       begin
         Rails.logger.info "Retiring worker: #{instance_id}"
         worker_dns = private_dns_name(instance_id)
-        $jenkins_client.job.build(JENKINS_CONFIG["shutdown_job"], { host: hostname(instance_id), instance: worker_dns } )
-        Resque.workers.select { |worker| resque_worker_ip(worker) == worker_dns }.each { |worker| worker.unregister_worker }
-
-        # Allow graceful shutdown of worker processes to complete
-        sleep(60)
+        workers_for_instance(instance_id).each { |worker| worker.unregister_worker if worker.idle? }
         $ec2.terminate_instances({ instance_ids: [instance_id] })
       rescue => e
         Rails.logger.error "Error retiring worker #{instance_id}: #{e.message}"
@@ -86,5 +84,9 @@ class ScalingService
 
   def resque_worker_ip worker
     worker.id.split(":").first
+  end
+
+  def workers_for_instance instance_id
+    Resque.workers.select { |worker| resque_worker_ip(worker) == private_dns_name(instance_id) }
   end
 end

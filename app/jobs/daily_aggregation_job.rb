@@ -1,7 +1,7 @@
 class DailyAggregationJob
   @queue = :scheduled_daily
 
-  MAX_INSTANCES         = 50
+  MAX_INSTANCES         = 20
   WORKERS_PER_INSTANCE  = 1
 
   def self.perform date=Date.yesterday, perform_rollups=false
