@@ -1,9 +1,8 @@
 class ScalingService
 
-  def initialize queue:, num_instances: , num_processes:
+  def initialize queue:, num_instances:
     @queue          = queue
     @num_instances  = num_instances
-    @num_processes  = num_processes
   end
 
   def scale_workers
@@ -31,10 +30,14 @@ class ScalingService
 
       begin
         Rails.logger.info "Deploying worker code on #{instance.instance_id} (#{index+1}/#{response.instances.length})"
-        jenkins_params  = { host: hostname(instance.instance_id), queue: @queue, count: @num_processes }
+        jenkins_params  = { host: hostname(instance.instance_id), queue: @queue }
         jenkins_opts    = { "build_start_timeout" => 60, "cancel_on_build_start_timeout" => true  }
         build_num       = $jenkins_client.job.build( JENKINS_CONFIG["job"], jenkins_params, jenkins_opts )
-        job_response    = $jenkins_client.job.get_build_details(JENKINS_CONFIG["job"], build_num)
+
+        while ( (job_response = $jenkins_client.job.get_build_details(JENKINS_CONFIG["job"], build_num))["result"].nil? ) do
+          Rails.logger.info "Waiting for deployment to complete on #{instance.instance_id}"
+          sleep(5)
+        end
 
         raise "Jenkins deploy failed for #{job_response["fullDisplayName"]}" unless job_response["result"] == "SUCCESS"
       rescue => e

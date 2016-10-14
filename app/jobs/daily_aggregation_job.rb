@@ -35,7 +35,7 @@ class DailyAggregationJob
       Rails.logger.info "No data available yet for #{@data}" and return
     end
 
-    scaler = ScalingService.new(queue: "albums", num_instances: servers_to_scale, num_processes: WORKERS_PER_INSTANCE )
+    scaler = ScalingService.new(queue: "albums", num_instances: servers_to_scale )
     scaler.scale_workers
 
     albums.each do |album|
@@ -86,6 +86,6 @@ class DailyAggregationJob
   end
 
   def servers_to_scale
-    [@num_albums / WORKERS_PER_INSTANCE, MAX_INSTANCES].min
+    [@num_albums, MAX_INSTANCES].min
   end
 end
