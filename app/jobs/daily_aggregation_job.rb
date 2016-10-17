@@ -4,7 +4,7 @@ class DailyAggregationJob
   MAX_INSTANCES         = 20
   WORKERS_PER_INSTANCE  = 1
 
-  def self.perform date=Date.yesterday, perform_rollups=false
+  def self.perform date=Date.today - 2.days, perform_rollups=false
     new(date: date, perform_rollups: perform_rollups).populate_aggregates
   end
 
@@ -63,7 +63,7 @@ class DailyAggregationJob
 
     if num_remaining == 0
       Rails.logger.info "Completed album by date aggregation"
-      log_record.update_attributes(status: AggregationLog::COMPLETED)
+      log_record.calculate_totals_and_complete(column: "trend_date", value: @date)
     else
       Rails.logger.info "Not all albums were successfully aggregated"
       log_record.update_attributes(status: AggregationLog::ERROR)

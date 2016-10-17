@@ -16,6 +16,10 @@
           <th scope="col">Trend Date</th>
           <th scope="col">Aggregation Type</th>
           <th scope="col">Status</th>
+          <th scope="col">Number of Releases</th>
+          <th scope="col">Streams</th>
+          <th scope="col">Album Downloads</th>
+          <th scope="col">Song Downloads</th>
           <th scope="col">Last Updated</th>
         </tr>
       </thead>
@@ -25,6 +29,10 @@
             <td><%= log.trend_date %></td>
             <td><%= log.aggregation_type %></td>
             <td><%= log.status %></td>
+            <td><%= number_with_delimiter(log.num_releases) %></td>
+            <td><%= number_with_delimiter(log.stream_count) %></td>
+            <td><%= number_with_delimiter(log.album_download_count) %></td>
+            <td><%= number_with_delimiter(log.song_download_count) %></td>
             <td><%= log.updated_at.strftime("%m/%d/%Y %I:%M:%S %p") %></td>
           </tr>
         <% end %>

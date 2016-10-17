@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161014161357) do
+ActiveRecord::Schema.define(version: 20161017180642) do
 
   create_table "aggregation_exclusions", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "exclusion_id"
@@ -23,8 +23,12 @@ ActiveRecord::Schema.define(version: 20161014161357) do
     t.date     "trend_date"
     t.string   "aggregation_type"
     t.string   "status"
-    t.datetime "created_at",       null: false
-    t.datetime "updated_at",       null: false
+    t.datetime "created_at",           null: false
+    t.datetime "updated_at",           null: false
+    t.integer  "num_releases"
+    t.integer  "stream_count"
+    t.integer  "album_download_count"
+    t.integer  "song_download_count"
   end
 
   create_table "albums_by_date", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
