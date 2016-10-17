@@ -10,7 +10,9 @@ nav.navbar {
   height: 21px;
 }
 
-.aggregation-form {
+.aggregation-form,
+.exclusions-form,
+.exclusion-pagination-top, {
   margin-top: 20px;
 }
 
@@ -42,4 +44,12 @@ nav.navbar {
 
 .log-arrow:hover {
   color: #fff;
+}
+
+.delete-icon {
+  background-image: image-url("delete.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 20px;
+  display: block;
 }

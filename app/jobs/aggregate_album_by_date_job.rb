@@ -8,8 +8,8 @@ class AggregateAlbumByDateJob
 
     album = Album.includes(:person, { creatives: :artist }).find(album_id)
 
-    if Person.exclude_ids.include?(album.person_id)
-      Rails.logger.info "Skipping album #{album_id} because owner is on exclude list"
+    if AggregationExclusion.exclude_album?(album)
+      Rails.logger.info "Skipping album #{album_id} because of exlcusion."
     else
       trend_month     = Date.strptime(date).beginning_of_month.strftime("%Y%m").to_i
       trend_year      = Date.strptime(date).strftime("%Y").to_i

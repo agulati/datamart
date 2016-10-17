@@ -15,9 +15,9 @@
   <body>
     <%= render "layouts/header" %>
     <div class="container">
-      <% flash.each do |name, msg| %>
-        <%= content_tag(:div, msg.html_safe, class: "alert alert-#{name}", role: "alert") %>
-      <% end %>
+      <div id="flash-messages">
+        <%= render partial: "layouts/flash_messages" %>
+      </div>
       <%= yield %>
     </div>
     <%= yield :page_script %>

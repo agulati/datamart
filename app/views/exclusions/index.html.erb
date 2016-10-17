@@ -1,0 +1,63 @@
+<div class="row">
+  <div class="col-xs-12">
+    <h2>Manage Exclusions</h2>
+  </div>
+</div>
+<%= form_tag "/exclusions", remote: true do %>
+  <div class="row exclusions-form">
+    <div class="form-group col-xs-6">
+      <legend>Exclusion Type</legend>
+      <div class="form-check">
+        <label class="form-check-label">
+          <%= radio_button_tag :exclusion_type, "Album", false, class: "form-check-input" %>
+          Album
+        </label>
+      </div>
+      <div class="form-check">
+        <label class="form-check-label">
+          <%= radio_button_tag :exclusion_type, "Person", false, class: "form-check-input" %>
+          Person
+        </label>
+      </div>
+    </div>
+    <div class="form-group col-xs-6">
+      <legend>Exclusion ID</legend>
+      <%= text_field_tag :exclusion_id, nil, class: "form-control" %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <%= submit_tag "Create Exclusion", class: "btn btn-primary pull-xs-right" %>
+    </div>
+  </div>
+<% end %>
+<div class="row exclusion-pagination-top">
+  <div class="col-xs-12 pull-xs-right">
+    <%= will_paginate @exclusions, renderer: BootstrapPagination::Rails, label: "Exclusions Pagination" %>
+  </div>
+</div>
+<div class="row">
+  <div class="col-xs-12">
+    <table class="table table-striped">
+      <thead class="thead-inverse">
+        <tr>
+          <th></th>
+          <th scope="col">ID</th>
+          <th scope="col">Exclusion Type</th>
+          <th scope="col">Exclusion ID</th>
+          <th scope="col">Create At</th>
+        </tr>
+      </thead>
+      <tbody class="exclusions-tbody">
+        <% @exclusions.each do |exclusion| %>
+          <%= render partial: "exclusions_row", locals: { exclusion: exclusion } %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="row">
+  <div class="col-xs-12">
+    <%= will_paginate @aggregation_logs, renderer: BootstrapPagination::Rails, label: "Aggregation Log Pagination" %>
+  </div>
+</div>
