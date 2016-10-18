@@ -16,4 +16,19 @@ namespace :aggregations do
       Rails.logger.info "Error aggregating album data for #{date}: #{e.message}"
     end
   end
+
+  task calculate_totals: :environment do
+    AggregationLog.where(num_releases: nil, status: "completed").each do |agg|
+      column, value = case (agg.aggregation_type.split /(?=[A-Z])/).last
+      when "Date"
+        ["trend_date", agg.trend_date.to_s]
+      when "Month"
+        ["trend_month", agg.trend_date.strftime("%Y%m")]
+      when "Year"
+        ["trend_year", agg.trend_date.strftime("%Y")]
+      end
+
+      agg.update_totals(column: column, value: value)
+    end
+  end
 end

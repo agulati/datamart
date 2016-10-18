@@ -10,7 +10,7 @@
 </div>
 <div class="row">
   <div class="col-xs-12">
-    <table class="table table-striped">
+    <table class="table table-striped aggregation-history-table">
       <thead class="thead-inverse">
         <tr>
           <th scope="col">Trend Date</th>
@@ -29,10 +29,10 @@
             <td><%= log.trend_date %></td>
             <td><%= log.aggregation_type %></td>
             <td><%= log.status %></td>
-            <td><%= number_with_delimiter(log.num_releases) %></td>
-            <td><%= number_with_delimiter(log.stream_count) %></td>
-            <td><%= number_with_delimiter(log.album_download_count) %></td>
-            <td><%= number_with_delimiter(log.song_download_count) %></td>
+            <td class="right-align"><%= number_with_delimiter(log.num_releases) %></td>
+            <td class="right-align"><%= number_with_delimiter(log.stream_count) %></td>
+            <td class="right-align"><%= number_with_delimiter(log.album_download_count) %></td>
+            <td class="right-align"><%= number_with_delimiter(log.song_download_count) %></td>
             <td><%= log.updated_at.strftime("%m/%d/%Y %I:%M:%S %p") %></td>
           </tr>
         <% end %>

@@ -7,7 +7,7 @@ class AggregationLog < ActiveRecord::Base
   COMPLETED   = "completed"
   ERROR       = "error"
 
-  def calculate_totals_and_complete column:, value:
+  def update_totals column:, value:, addl_updates: {}
     klass = aggregation_type.constantize
     tbl   = klass.arel_table
 
@@ -24,8 +24,15 @@ class AggregationLog < ActiveRecord::Base
       stream_count:         results.stream_count,
       album_download_count: results.album_download_count,
       song_download_count:  results.song_download_count,
-      num_releases:         results.num_releases,
-      status:               AggregationLog::COMPLETED
-    })
+      num_releases:         results.num_releases
+    }.merge(addl_updates))
+  end
+
+  def complete_aggregation column:, value:
+    update_totals(
+      column:       column,
+      value:        value,
+      addl_updates: { status: AggregationLog::COMPLETED }
+    )
   end
 end
