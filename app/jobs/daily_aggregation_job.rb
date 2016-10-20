@@ -35,13 +35,13 @@ class DailyAggregationJob
       Rails.logger.info "No data available yet for #{@data}" and return
     end
 
-    scaler = ScalingService.new(queue: "albums", num_instances: servers_to_scale )
-    scaler.scale_workers
-
     albums.each do |album|
       $redis.sadd(@working_queue_key, album.album_id)
       Resque.enqueue(AggregateAlbumByDateJob, @date, album.album_id)
     end
+
+    scaler = ScalingService.new(queue: "albums", num_instances: servers_to_scale )
+    scaler.scale_workers
 
     repeat_count        = 0
     previous_remaining  = 0

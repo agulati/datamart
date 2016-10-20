@@ -18,7 +18,7 @@ namespace :aggregations do
   end
 
   task calculate_totals: :environment do
-    AggregationLog.where(num_releases: nil, status: "completed").each do |agg|
+    AggregationLog.where(num_releases: nil, status: AggregationLog::COMPLETED).each do |agg|
       column, value = case (agg.aggregation_type.split /(?=[A-Z])/).last
       when "Date"
         ["trend_date", agg.trend_date.to_s]

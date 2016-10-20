@@ -21,7 +21,9 @@ class ScalingService
     $ec2.create_tags({ resources: @worker_instances, tags: [{ key: "Name", value: "Trends Worker" }] })
 
     response.instances.each_with_index do |instance, index|
-      until instance_running?(instance.instance_id) do
+      wait_count = 0
+      until instance_running?(instance.instance_id) || wait_count >= 12 do
+        wait_count += 1
         Rails.logger.info "Waiting for #{instance.instance_id} to start. Current status: #{instance_state(instance.instance_id)}"
 
         # Allow instance time to start up properly
@@ -29,6 +31,8 @@ class ScalingService
       end
 
       begin
+        raise "Instance #{instance.instance_id} never started properly." unless instance_running?(instance.instance_id)
+
         Rails.logger.info "Deploying worker code on #{instance.instance_id} (#{index+1}/#{response.instances.length})"
         jenkins_params  = { host: hostname(instance.instance_id), queue: @queue }
         jenkins_opts    = { "build_start_timeout" => 60, "cancel_on_build_start_timeout" => true  }
