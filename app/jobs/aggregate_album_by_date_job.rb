@@ -11,7 +11,7 @@ class AggregateAlbumByDateJob
     if AggregationExclusion.exclude_album?(album)
       Rails.logger.info "Skipping album #{album_id} because of exclusion."
     else
-      Rails.logger.info "Aggregating album #{album_id} for #{date}."
+      Rails.logger.debug "Aggregating album #{album_id} for #{date}."
       trend_month     = Date.strptime(date).beginning_of_month.strftime("%Y%m").to_i
       trend_year      = Date.strptime(date).strftime("%Y").to_i
       tds             = DetailSummary.arel_table
@@ -54,11 +54,11 @@ class AggregateAlbumByDateJob
         aggregate_rows << aggregate_row
       end
 
-      Rails.logger.info "Saving aggregated rows for album #{album_id} for #{date}."
+      Rails.logger.debug "Saving aggregated rows for album #{album_id} for #{date}."
       AlbumsByDate.import(aggregate_rows, batch_size: BATCH_SIZE)
     end
 
-    Rails.logger.info "Removing album #{album_id} from list of remaining albums."
+    Rails.logger.debug "Removing album #{album_id} from list of remaining albums."
     $redis.srem("tc_trends::aggregation::albums::#{date}", album_id)
 
   rescue Exception => e

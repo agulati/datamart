@@ -32,7 +32,7 @@ class DailyAggregationJob
     if @num_albums > 0
       Rails.logger.info "Found #{@num_albums} albums, beginning aggregation for #{@date}"
     else
-      Rails.logger.info "No data available yet for #{@data}" and return
+      Rails.logger.info "No data available yet for #{@date}" and return
     end
 
     albums.each do |album|
@@ -58,7 +58,7 @@ class DailyAggregationJob
 
       previous_remaining = num_remaining
       Rails.logger.info "Waiting for aggregation to complete (#{num_remaining}/#{@num_albums} remaining)"
-      sleep(60)
+      sleep(120)
     end
 
     if num_remaining == 0

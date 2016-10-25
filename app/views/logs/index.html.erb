@@ -1,5 +1,7 @@
 <% content_for :head_content do %>
-<meta http-equiv="refresh" content="<%= @refresh_interval %>" />
+  <% unless @refresh_interval == "none" %>
+    <meta http-equiv="refresh" content="<%= @refresh_interval %>" />
+  <% end %>
 <% end %>
 
 <div class="row">

@@ -1,4 +1,4 @@
-namespace :aggregations do
+namespace :aggregate do
   desc "Create album aggregations for a specific date"
   task albums: :environment do
     raise "You must provide a date for aggregation in the format of YYYY-MM-DD or an array of [YYYY-MM-DD,YYYY-MM-DD,YYYY-MM-DD,...]" unless (ENV["DATE"] || ENV["DATES"])
