@@ -1,6 +1,8 @@
 class AggregationLog < ActiveRecord::Base
   self.table_name = "aggregation_log"
 
+  after_commit :notify_status
+
   default_scope { order("trend_date DESC, updated_at DESC") }
 
   IN_PROGRESS = "in-progress"
@@ -34,5 +36,12 @@ class AggregationLog < ActiveRecord::Base
       value:        value,
       addl_updates: { status: AggregationLog::COMPLETED }
     )
+  end
+
+  private
+
+  def notify_status
+    message = "#{aggregation_type} is now #{status} for #{trend_date}"
+    NotificationService.notify(message)
   end
 end

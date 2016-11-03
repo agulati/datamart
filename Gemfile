@@ -12,6 +12,7 @@ gem "jbuilder",                 "~> 2.5"
 gem "activerecord-import"
 gem "bootstrap",                "4.0.0.alpha4"
 gem "will_paginate-bootstrap",  git: "git@github.com:tunecore/will_paginate-bootstrap.git"
+gem "faraday"
 
 group :development, :test do
   gem "byebug",                 platform: :mri
