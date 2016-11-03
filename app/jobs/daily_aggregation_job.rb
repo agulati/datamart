@@ -63,7 +63,7 @@ class DailyAggregationJob
 
     if num_remaining == 0
       Rails.logger.info "Completed album by date aggregation"
-      log_record.complete_aggregation(column: "trend_date", value: @date)
+      log_record.complete_aggregation(count_column: "album_id", where_column: "trend_date", value: @date)
     else
       Rails.logger.info "Not all albums were successfully aggregated"
       log_record.update_attributes(status: AggregationLog::ERROR)

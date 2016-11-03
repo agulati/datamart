@@ -7,18 +7,18 @@ class AggregationLog < ActiveRecord::Base
   COMPLETED   = "completed"
   ERROR       = "error"
 
-  def update_totals column:, value:, addl_updates: {}
-    klass = aggregation_type.constantize
-    tbl   = klass.arel_table
+  def update_totals count_column:, where_column:, value:, addl_updates: {}
+    klass     = aggregation_type.constantize
+    tbl       = klass.arel_table
 
-    sql = tbl.project(
-      tbl[:id].count.as("num_releases"),
-      tbl[:stream_count].sum.as("stream_count"),
-      tbl[:album_download_count].sum.as("album_download_count"),
-      tbl[:song_download_count].sum.as("song_download_count")
-    ).where(tbl[column.to_sym].eq(value))
+    sql       = tbl.project(
+                  Arel::Distinct.new(tbl[count_column.to_sym]).count.as("num_releases"),
+                  tbl[:stream_count].sum.as("stream_count"),
+                  tbl[:album_download_count].sum.as("album_download_count"),
+                  tbl[:song_download_count].sum.as("song_download_count")
+                ).where(tbl[where_column.to_sym].eq(value))
 
-    results = klass.find_by_sql(sql).first
+    results   = klass.find_by_sql(sql).first
 
     update_attributes({
       stream_count:         results.stream_count,

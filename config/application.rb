@@ -12,9 +12,9 @@ module TcTrends
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
-    config.autoload_paths += Dir["#{Rails.root}/lib"]
-    config.logger = RemoteLogger.new(File.join(Rails.root, "log", "#{Rails.env}.log"))
+    config.autoload_paths   += Dir["#{Rails.root}/lib"]
+    config.logger           = RemoteLogger.new(File.join(Rails.root, "log", "#{Rails.env}.log"))
     config.logger.formatter = Logger::Formatter.new
-    config.time_zone = "Eastern Time (US & Canada)"
+    config.time_zone        = "Eastern Time (US & Canada)"
   end
 end
