@@ -1,7 +1,8 @@
 class AggregationLog < ActiveRecord::Base
   self.table_name = "aggregation_log"
 
-  after_commit :notify_status
+  after_commit :notify_status, if: ->(record) { record.status.present? and record.status_changed? }
+
 
   default_scope { order("trend_date DESC, updated_at DESC") }
 
@@ -14,7 +15,7 @@ class AggregationLog < ActiveRecord::Base
     tbl       = klass.arel_table
 
     sql       = tbl.project(
-                  Arel::Distinct.new(tbl[count_column.to_sym]).count.as("num_releases"),
+                  tbl[count_column.to_sym].count(true).as("num_releases"),
                   tbl[:stream_count].sum.as("stream_count"),
                   tbl[:album_download_count].sum.as("album_download_count"),
                   tbl[:song_download_count].sum.as("song_download_count")
@@ -30,9 +31,10 @@ class AggregationLog < ActiveRecord::Base
     }.merge(addl_updates))
   end
 
-  def complete_aggregation column:, value:
+  def complete_aggregation count_column:, where_column:, value:
     update_totals(
-      column:       column,
+      count_column: count_column,
+      where_column: where_column,
       value:        value,
       addl_updates: { status: AggregationLog::COMPLETED }
     )
